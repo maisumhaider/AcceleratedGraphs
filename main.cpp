@@ -127,7 +127,7 @@ int main() {
   std::vector<int> graph_out(LENGTH); // output of end node
 
 
-  cl::Buffer node_0_inp;                       // device memory used for the input  a vector
+  cl::Buffer node_inp_0;                       // device memory used for the input  a vector
   cl::Buffer node_0_1;                       // device memory used for the input  b vector
   cl::Buffer node_1_2;                       // device memory used for the input c vector
   cl::Buffer node_1_3;                       // device memory used for the input  a vector
@@ -151,37 +151,70 @@ int main() {
     // Get available platforms
     cl::Context context(DEVICE);
     // Read source file
-    std::ifstream sourceFile("Inc2.cl");
-    std::string sourceCode(
-        std::istreambuf_iterator<char>(sourceFile),
+    std::ifstream sourceInc2("Inc2.cl");
+    std::string Inc2Code(
+        std::istreambuf_iterator<char>(sourceInc2),
         (std::istreambuf_iterator<char>()));
 
-    // Make program of the source code in the context
-    cl::Program program(context,{sourceCode},true);
+    std::ifstream sourceMul23("Mul23.cl");
+    std::string Mul23Code(
+        std::istreambuf_iterator<char>(sourceMul23),
+        (std::istreambuf_iterator<char>()));
+
+    std::ifstream sourceSub("Sub.cl");
+    std::string SubCode(
+        std::istreambuf_iterator<char>(sourceSub),
+        (std::istreambuf_iterator<char>()));
+
+    std::ifstream sourceAdd2to1("Add2to1.cl");
+    std::string Add2to1Code(
+        std::istreambuf_iterator<char>(sourceAdd2to1),
+        (std::istreambuf_iterator<char>()));
+
+
+
+    cl::Program Mul23(context,Mul23Code,true);
+    cl::Program Sub(context,SubCode,true);
+    cl::Program Add2to1(context,Add2to1Code,true);
+    cl::Program Inc2(context,Inc2Code,true);
+
     cl::CommandQueue queue(context);
 
-    cl::compatibility::make_kernel<cl::Buffer,cl::Buffer>inc2(program,"Inc2");
+    cl::compatibility::make_kernel<cl::Buffer,cl::Buffer>inc2(Inc2,"Inc2");
+    cl::compatibility::make_kernel<cl::Buffer,cl::Buffer,cl::Buffer>mul23(Mul23,"Mul23");
+    cl::compatibility::make_kernel<cl::Buffer,cl::Buffer>sub2(Sub,"Sub2");
+    cl::compatibility::make_kernel<cl::Buffer,cl::Buffer>sub3(Sub,"Sub3");
+    cl::compatibility::make_kernel<cl::Buffer,cl::Buffer,cl::Buffer>acc(Add2to1,"Add2to1");
 
-    d_a   = cl::Buffer(context, h_a.begin(), h_a.end(), true);
-//    d_b   = cl::Buffer(context, h_b.begin(), h_b.end(), true);
+    node_inp_0 = cl::Buffer(context, graph_inp.begin(), graph_inp.end(), true);
+    node_0_1 = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(int) * LENGTH);
+    node_1_2= cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(int) * LENGTH);
+    node_1_3 = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(int) * LENGTH);
+    node_2_4 = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(int) * LENGTH);
+    node_3_4 = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(int) * LENGTH);
+    node_4_out = cl::Buffer(context,CL_MEM_WRITE_ONLY, sizeof (int)*LENGTH);
 
 
-    d_c  = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(int) * LENGTH);
+    inc2(cl::EnqueueArgs(queue,cl::NDRange(count)),node_inp_0,node_0_1);
 
-    inc2(cl::EnqueueArgs(
-            queue,
-            cl::NDRange(count)),
-        d_a,
-        d_c);
+    mul23(cl::EnqueueArgs(queue,cl::NDRange(count)),node_0_1,node_1_2,node_1_3);
 
-    cl::copy(queue, d_c, h_c.begin(), h_c.end());
+    sub2(cl::EnqueueArgs(queue,cl::NDRange(count)),node_1_2,node_2_4);
+
+    sub3(cl::EnqueueArgs(queue,cl::NDRange(count)),node_1_3,node_3_4);
+
+    acc(cl::EnqueueArgs(queue,cl::NDRange(count)),node_2_4,node_3_4,node_4_out);
+    queue.finish();
+
+
+    cl::copy(queue, node_4_out, graph_out.begin(), graph_out.end());
     int correct = 0;
     int tmp;
     for(int i = 0; i < LENGTH; i++)
     {
-      printf(" %d + %d = %d \n ",h_a[i], h_b[i], h_c[i]);
+      printf(" 5*%d + 5 = %d\n",graph_inp[i], graph_out[i]);
     }
-
+    queue.flush ();
 
   }
   catch (cl::Error err) {
