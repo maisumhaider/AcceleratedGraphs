@@ -123,23 +123,27 @@ const char *err_code (cl_int err_in)
 int main() {
 
   // Create the two input vectors
-  std::vector<int> h_a(LENGTH);                // a vector
-  std::vector<int> h_b(LENGTH);                // b vector
-  std::vector<int> h_c(LENGTH);                // c vector
+  std::vector<int> graph_inp(LENGTH); // input for starting node
+  std::vector<int> graph_out(LENGTH); // output of end node
 
 
-  cl::Buffer d_a;                       // device memory used for the input  a vector
-  cl::Buffer d_b;                       // device memory used for the input  b vector
-  cl::Buffer d_c;                       // device memory used for the input c vector
+  cl::Buffer node_0_inp;                       // device memory used for the input  a vector
+  cl::Buffer node_0_1;                       // device memory used for the input  b vector
+  cl::Buffer node_1_2;                       // device memory used for the input c vector
+  cl::Buffer node_1_3;                       // device memory used for the input  a vector
+  cl::Buffer node_3_4;                       // device memory used for the input  a vector
+  cl::Buffer node_2_4;                       // device memory used for the input  a vector
+  cl::Buffer node_4_out;                       // device memory used for the input  a vector
+
 
 
   // Fill vectors a and b with random float values
   int count = LENGTH;
   for(int i = 0; i < count; i++)
   {
-    h_a[i]  =  i;
-    h_b[i]  = 0;
-    h_c[i]  = 0;
+    graph_inp[i]  =  i+1;
+    graph_out[i] = 0;
+
 
   }
 
@@ -147,28 +151,27 @@ int main() {
     // Get available platforms
     cl::Context context(DEVICE);
     // Read source file
-    std::ifstream sourceFile("addVectors.cl");
+    std::ifstream sourceFile("Inc2.cl");
     std::string sourceCode(
         std::istreambuf_iterator<char>(sourceFile),
         (std::istreambuf_iterator<char>()));
 
     // Make program of the source code in the context
-    cl::Program program(context,sourceCode,true);
+    cl::Program program(context,{sourceCode},true);
     cl::CommandQueue queue(context);
 
-    cl::compatibility::make_kernel<cl::Buffer,cl::Buffer,cl::Buffer>vadd(program,"vadd");
+    cl::compatibility::make_kernel<cl::Buffer,cl::Buffer>inc2(program,"Inc2");
 
     d_a   = cl::Buffer(context, h_a.begin(), h_a.end(), true);
-    d_b   = cl::Buffer(context, h_b.begin(), h_b.end(), true);
+//    d_b   = cl::Buffer(context, h_b.begin(), h_b.end(), true);
 
 
     d_c  = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(int) * LENGTH);
 
-    vadd(cl::EnqueueArgs(
+    inc2(cl::EnqueueArgs(
             queue,
             cl::NDRange(count)),
         d_a,
-        d_b,
         d_c);
 
     cl::copy(queue, d_c, h_c.begin(), h_c.end());
