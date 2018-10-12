@@ -1,152 +1,193 @@
-#include <iostream>
-#include <iterator>
-#include <CL/cl.hpp>
-#include <cassert>
-#include <fstream>
-#include <ctime>
+/**********
+Copyright (c) 2017, Xilinx, Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software
+without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+**********/
+
+#include "xcl2.hpp"
+#include <vector>
+#include <stdlib.h>
 #include <cmath>
+#include <cassert>
+//DATA_SIZE should be multiple of 4 as Kernel Code is using int4 vector datatype
+//to read the operands from Global Memory. So every read/write to global memory 
+//will read 16 integers value.
 
-#define SIZE 1
-#define SIZE2 784
-#define SIZE3 500
-#define OUTPUTSIZE 10
-using std::cout;
+#define SIZE_M 1
+#define SIZE_K 784
+#define SIZE_N 500
+#define SIZE_OUT 10
 using std::vector;
+using std::cout;
 using std::endl;
+using std::fabs;
 
-
-bool cmpf(float A, float B, float tolerance = 0.05f) {
-    return (fabs(A - B) < tolerance);
+bool cmpFloat(float A, float B, float tolerance = 0.0f){
+	if(fabs(A-B)> tolerance)return false;
+	return true;
 }
+float RandomFloat(float min = 0.0, float max = float(SIZE_M)){
+	assert(max>min);
+	float random = ((float)rand())/(float)RAND_MAX;
+	float range = max - min;
+	return (random*range) + min;
+}
+void mmult(const float* A, const float* B, float* C, const int* dim){
+	int dim_M = dim[0];
+	int dim_K = dim[1];
+	int dim_N = dim[2];
+	float acc = 0.0f;
+	for(int m=0;m<dim_M;m++){
+		for(int n=0;n<dim_N;n++){
+			acc = 0.0f;
+			for(int k=0;k<dim_K;k++){
+				acc += A[k*dim_M+m]*B[n*dim_K+k];
+			}
+			C[n*dim_M +m] = acc;
+		}
+	}
+}
+void mmult_fpga_ocl(cl::CommandQueue &q,cl::Context &context,cl::Kernel &kernel,
+		vector<float,aligned_allocator<float>> &source_in1,
+		vector<float,aligned_allocator<float>> &source_in2,
+		vector<float,aligned_allocator<float>> &source_hw_results,
+		vector<int,aligned_allocator<int>> &dimensions
+		){
 
+	size_t  input_size = sizeof(float)*dimensions[0]*dimensions[1];
+	size_t  weights_size = sizeof(float)*dimensions[1]*dimensions[2];
+	size_t output_size = sizeof(float)*dimensions[0]*dimensions[2];
 
-float RandomFloat(float min = 0.0, float max = float(SIZE))
+	cl::Buffer buffer_in1 (context, CL_MEM_READ_ONLY,input_size);
+	cl::Buffer buffer_in2 (context, CL_MEM_READ_ONLY,weights_size);
+	cl::Buffer buffer_output(context, CL_MEM_WRITE_ONLY,output_size);
+	cl::Buffer buffer_dim(context, CL_MEM_WRITE_ONLY,sizeof(int)*3);
+
+	int nargs=0;
+	kernel.setArg(nargs++,buffer_in1);
+	kernel.setArg(nargs++,buffer_in2);
+	kernel.setArg(nargs++,buffer_output);
+	kernel.setArg(nargs++,buffer_dim);
+
+    q.enqueueWriteBuffer(buffer_in1, CL_TRUE, 0, input_size, source_in1.data());
+    q.enqueueWriteBuffer(buffer_in2, CL_TRUE, 0, weights_size, source_in2.data());
+    q.enqueueWriteBuffer(buffer_dim, CL_TRUE, 0, sizeof(int)*3, dimensions.data());
+
+    //Launch the Kernel
+    q.enqueueTask(kernel);
+
+    //Copying Device result data to Host memory
+    q.enqueueReadBuffer(buffer_output, CL_TRUE, 0, output_size, source_hw_results.data());
+
+    q.finish();
+}
+int main(int argc, char** argv)
 {
-    // this  function assumes max > min, you may want
-    // more robust error checking for a non-debug build
-    assert(max > min);
-    float random = ((float) rand()) / (float) RAND_MAX;
+	srand (time(NULL));
+    //Allocate Memory in Host Memory    
 
-    // generate (in your case) a float between 0 and (4.5-.78)
-    // then add .78, giving you a float between .78 and 4.5
-    float range = max - min;
-    return (random*range) + min;
-}
-float relu(float input){
-    return input > 0 ? input:0;
-}
-void multiplyMatrices(const float *matA,const float *matB,float *matC,const int *dim) {
-  int dimM = dim[0],dimN= dim[2],dimK= dim[1];
+    //Data Vectors
+    std::vector<float,aligned_allocator<float>> input (SIZE_M*SIZE_K);
+    std::vector<float,aligned_allocator<float>> weight_layer1 (SIZE_K*SIZE_N);
+    
+    std::vector<int,aligned_allocator<int>> dimensions       (3);
 
-  for (int m=0; m<dimM; m++) {
-    for (int n=0; n<dimN; n++) {
-      float acc = 0.0f;
-      for (int k=0; k<dimK; k++) {
-        acc += matA[k*dimM + m] * matB[n*dimK + k];
-      }
-      matC[n*dimM + m] = relu(acc);
+    std::vector<float,aligned_allocator<float>> source_hw_results(SIZE_M*SIZE_N);
+    std::vector<float,aligned_allocator<float>> source_sw_results(SIZE_M*SIZE_N);
+    dimensions[0] = SIZE_M;
+	dimensions[1] = SIZE_K;
+	dimensions[2] = SIZE_N;
+
+    // Create the test data and Software Result
+    for(auto &x:input)x = RandomFloat();
+    for(auto &x:weight_layer1)x = RandomFloat();
+    for(auto &x:source_hw_results)x = 0;
+
+//OPENCL HOST CODE AREA START
+    std::vector<cl::Device> devices = xcl::get_xil_devices();
+    cl::Device device = devices[0];
+
+    cl::Context context(device);
+    cl::CommandQueue q(context, device, CL_QUEUE_PROFILING_ENABLE);
+    std::string device_name = device.getInfo<CL_DEVICE_NAME>(); 
+
+    //Create Program and Kernel
+    std::string binaryFile = xcl::find_binary_file(device_name,"vadd");
+    cl::Program::Binaries bins = xcl::import_binary_file(binaryFile);
+    devices.resize(1);
+    cl::Program program(context, devices, bins);
+    cl::Kernel krnl_vector_add(program,"mmult");
+
+    //Allocate Buffer in Global Memory
+
+    //Layer 2
+
+    mmult(input.data(),weight_layer1.data(),source_sw_results.data(),dimensions.data());
+    mmult_fpga_ocl(q,context,krnl_vector_add,input,weight_layer1,source_hw_results,dimensions);
+    
+    std::vector<float,aligned_allocator<float>> weight_layer2 (SIZE_N*SIZE_N);
+    std::vector<float,aligned_allocator<float>> sw_op_l2_results (SIZE_M*SIZE_N);    
+    std::vector<float,aligned_allocator<float>> hw_op_l2_results (SIZE_M*SIZE_N);
+    for(auto &x:weight_layer2)x = RandomFloat();
+    for(auto &x:sw_op_l2_results)x = 0.0f;    
+    dimensions[0] = SIZE_M;
+    dimensions[1] = SIZE_N;
+    dimensions[2] = SIZE_N;
+
+    mmult(source_sw_results.data(),weight_layer2.data(),sw_op_l2_results.data(),dimensions.data());
+    mmult_fpga_ocl(q,context,krnl_vector_add,source_sw_results,weight_layer2,hw_op_l2_results,dimensions);
+
+    // Layer 3
+    std::vector<float,aligned_allocator<float>> weight_layer3 (SIZE_N*SIZE_OUT);
+    std::vector<float,aligned_allocator<float>> sw_op_l3_results (SIZE_M*SIZE_OUT);    
+    std::vector<float,aligned_allocator<float>> hw_op_l3_results (SIZE_M*SIZE_OUT);
+    for(auto &x:weight_layer3)x = RandomFloat();
+    for(auto &x:sw_op_l3_results)x = 0.0f;    
+    dimensions[0] = SIZE_M;
+    dimensions[1] = SIZE_N;
+    dimensions[2] = SIZE_OUT;
+
+    mmult(sw_op_l2_results.data(),weight_layer3.data(),sw_op_l3_results.data(),dimensions.data());
+    mmult_fpga_ocl(q,context,krnl_vector_add,sw_op_l2_results,weight_layer3,hw_op_l3_results,dimensions);
+
+
+    //OPENCL HOST CODE AREA END
+
+    // Compare the results of the Device to the simulation
+    bool match = true;
+    for (int i = 0 ; i < SIZE_M*SIZE_OUT ; i++){
+    	 std::cout << "i = " << i << " CPU result = " << sw_op_l3_results[i]
+    	                << " Device result = " << hw_op_l3_results[i] << std::endl;
+        if (hw_op_l3_results[i]!=sw_op_l3_results[i]){
+            std::cout << "Error: Result mismatch" << std::endl;
+            match = false;
+            break;
+        }
+
     }
-  }
-}
-void setupArray(float *arr, int size, bool setRandom= false, float max=1.0){
-    for(int i =0 ; i< size; i++){
-                arr[i] = setRandom ? RandomFloat(0,max) : max;
-    }
-}
-void mmult_FPGA(const float* input,const int input_dim, const float* weight_layer1,const int weight_dim, float* output,const int output_dim, const int* dim_layer1)
-{
-    std::ifstream kernel_file("Kernel.cl");
-    std::__cxx11::string kernel_source(
-          std::istreambuf_iterator<char>(kernel_file),
-          (std::istreambuf_iterator<char>()));
-    vector<cl::Platform> all_platforms;
-    cl::Platform::get(&all_platforms);
-    assert(all_platforms.size()>0);
-    cl::Platform default_platform = all_platforms.front();
-    cout<<"Using default platform "<<default_platform.getInfo<CL_PLATFORM_NAME>()<<endl;
-    vector<cl::Device> platform_devices;
-    default_platform.getDevices(CL_DEVICE_TYPE_ALL,&platform_devices);
-    assert(platform_devices.size()>0);
-    cl::Device default_device = platform_devices[platform_devices.size()-1];
-    cout<<"Available devices :"<<platform_devices.size()<<" Using default platform "<<default_device.getInfo<CL_DEVICE_NAME>()<<endl;
-    cl::Context context(default_device);
-    cl::Program program(context,kernel_source, true);
-
-    cl::Buffer buffer_A(context, CL_MEM_READ_WRITE, sizeof(float) * input_dim);
-    cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, sizeof(float) * weight_dim);
-    cl::Buffer buffer_C(context, CL_MEM_READ_WRITE, sizeof(float) * output_dim);
-    cl::Buffer buffer_N(context, CL_MEM_READ_WRITE, sizeof(int)*3);
-
-    int nargs=0;
-    cl::Kernel mmult(program,"mmult");
-    mmult.setArg(nargs++,buffer_A);
-    mmult.setArg(nargs++,buffer_B);
-    mmult.setArg(nargs++,buffer_C);
-    mmult.setArg(nargs,buffer_N);
-
-    cl::CommandQueue queue(context,default_device);
-    queue.enqueueWriteBuffer(buffer_A,CL_TRUE,0,sizeof(float) * input_dim,input);
-    queue.enqueueWriteBuffer(buffer_B,CL_TRUE,0,sizeof(float) * weight_dim,weight_layer1);
-    queue.enqueueWriteBuffer(buffer_N,CL_TRUE,0,sizeof(int)*3,dim_layer1);
-    queue.enqueueNDRangeKernel(mmult, cl::NullRange, cl::NDRange(1), cl::NullRange);
-    queue.finish();
-    queue.enqueueReadBuffer(buffer_C,CL_TRUE,0,sizeof(float) * output_dim,output);
-    queue.finish();
-}
-void mlp_compute(float *input, float *weight,float *output, int *dims){
-    int input_dim = dims[0]*dims[1];
-    int weight_dim = dims[1]*dims[2];
-    int output_dim = dims[0]*dims[2];
-    float* out_sim = new float[output_dim];
-
-    setupArray(input,input_dim, true,SIZE2);
-
-    setupArray(weight,weight_dim, true,1.0);
-    setupArray(out_sim,output_dim, false,0.0);
-    setupArray(output,output_dim, false,0.0);
-
-    multiplyMatrices(input,weight,out_sim,dims);
-    mmult_FPGA(input,input_dim, weight,weight_dim, output,output_dim, dims);
-
-    for(int i=0;i<output_dim;i++){
-//        assert(cmpf(output[i],out_sim[i]));
-            if( not cmpf(output[i],out_sim[i])) {
-                cout << output[i] << " " << out_sim[i] << endl;
-                exit(-1);
-            }
-    }
-    delete[] out_sim;
-
-}
-int main(){
-    srand (time(NULL));
-    int *dim_layer = new int[3]{SIZE,SIZE2,SIZE3};
-
-    float* input = new float[dim_layer[0]*dim_layer[1]];
-    float* weight_layer = new float[dim_layer[1]*dim_layer[2]];
-    float* mlp_layer_output = new float[dim_layer[0]*dim_layer[2]];
-
-    cout<<"Computing First MLP Layer 1 "<<endl;
-    mlp_compute(input,weight_layer,mlp_layer_output,dim_layer);
-    delete[] weight_layer;
-    delete[] input;
-    delete[] dim_layer;
-    dim_layer = new int[3]{SIZE,SIZE3,SIZE3};
-    weight_layer = new float[dim_layer[1]*dim_layer[2]];
-    float* mlp_layer2_output = new float[dim_layer[0]*dim_layer[2]];
-
-    cout<<"Computing First MLP Layer 2 "<<endl;
-    mlp_compute(mlp_layer_output,weight_layer,mlp_layer2_output,dim_layer);
-    delete[] weight_layer;
-    delete[] mlp_layer_output;
-    delete[] dim_layer;
-    dim_layer = new int[3]{SIZE,SIZE3,OUTPUTSIZE};
-    weight_layer = new float[dim_layer[1]*dim_layer[2]];
-    float* mlp_layer3_output = new float[dim_layer[0]*dim_layer[2]];
-    cout<<"Computing First MLP Layer 3"<<endl;
-    mlp_compute(mlp_layer2_output,weight_layer,mlp_layer3_output,dim_layer);
-
-    cout<<"All tested passed"<<endl;
-    cout<<endl;
-    return 0;
+    std::cout << "TEST " << (match ? "PASSED" : "FAILED") << std::endl; 
+    return (match ? EXIT_SUCCESS :  EXIT_FAILURE);
 }
