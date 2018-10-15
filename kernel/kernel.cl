@@ -1,5 +1,4 @@
-kernel __attribute__ ((reqd_work_group_size(1, 1, 1)))
-void mmult( __global float* matA,  //Read-only input matrix1
+kernel void mmult( __global float* matA,  //Read-only input matrix1
                      __global float* matB,  //Read-only input matrix2
                      __global float* matC,  //Output matrix
                      __global int* max             //One dimension of the matrix
