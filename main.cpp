@@ -1,3 +1,4 @@
+//TODO: add free method for _aligned_malloc. UNSAFE.
 #define posix_memalign(p, a, s) (((*(p)) = _aligned_malloc((s), (a))), *(p) ?0 :errno)
 #include <CL/cl.hpp>
 #include <ctime>
@@ -52,13 +53,17 @@ void mmult(const float* A, const float* B, float* C, const int* dim){
 	int dim_K = dim[1];
 	int dim_N = dim[2];
 	float acc = 0.0f;
-	for(int m=0;m<dim_M;m++){
-		for(int n=0;n<dim_N;n++){
-			acc = 0.0f;
-			for(int k=0;k<dim_K;k++){
-				acc += A[k*dim_M+m]*B[n*dim_K+k];
-			}
-			C[n*dim_M +m] = acc;
+    int index,index2,resIndex;
+    for(int m=0;m<dim_M;m++){
+        for(int n=0;n<dim_N;n++){
+            acc = 0.0f;
+            for(int k=0;k<dim_K;k++){
+                index = m*dim_K+k;
+                index2 = n*dim_K+k;
+                acc += A[index]*B[index2];
+            }
+            resIndex = m*dim_N +n;
+            C[resIndex] = acc;
 		}
 	}
 }
@@ -168,8 +173,12 @@ int main(int argc, char** argv)
     mmult_fpga_ocl(q,context,krnl_vector_add,sw_op_l2_results,weight_layer3,hw_op_l3_results,dimensions);
     bool match = true;
     for (int i = 0 ; i < SIZE_M*SIZE_OUT ; i++){
-    	 std::cout << "i = " << i << " CPU result = " << sw_op_l3_results[i]
-    	                << " Device result = " << hw_op_l3_results[i] << std::endl;}
+        if(sw_op_l3_results[i]!=hw_op_l3_results[i]) {
+            match= false;
+            std::cout << "i = " << i << " CPU result = " << sw_op_l3_results[i]
+                      << " Device result = " << hw_op_l3_results[i] << std::endl;
+        }
+    }
     std::cout << "TEST " << (match ? "PASSED" : "FAILED") << std::endl; 
     return (match ? EXIT_SUCCESS :  EXIT_FAILURE);
 }
