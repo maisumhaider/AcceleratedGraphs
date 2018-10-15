@@ -95,7 +95,7 @@ void mmult_fpga_ocl(cl::CommandQueue &q,cl::Context &context,cl::Kernel &kernel,
 
     //Launch the Kernel
 //    q.enqueueTask(kernel);
-    q.enqueueNDRangeKernel(kernel,0,cl::NDRange(1),cl::NullRange);
+    q.enqueueNDRangeKernel(kernel,0,cl::NDRange(dimensions[0]*dimensions[2]),cl::NullRange);
     //Copying Device result data to Host memory
     q.enqueueReadBuffer(buffer_output, CL_TRUE, 0, output_size, source_hw_results.data());
 

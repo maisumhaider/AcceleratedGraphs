@@ -4,22 +4,23 @@ kernel void mmult( __global float* matA,  //Read-only input matrix1
                      __global int* max             //One dimension of the matrix
 )
 {
-    int globalRow = get_global_id(0);
-    int globalCol = get_global_id(1);
     int dimM = max[0];
     int dimK =  max[1];
     int dimN = max[2];
-    int m,n,k;
+    int id = get_global_id(0);
+    int globalRow = id/dimM;
+    int globalCol = id%dimM;
+    int k;
     int index,index2,resIndex;
 //    for (m=0; m<dimM; m++) {
 //        for (n=0; n<dimN; n++) {
             float acc = 0.0f;
             for (k=0; k<dimK; k++) {
-                index = m*dimK+k;
-                index2 = n*dimK+k;
+                index = globalRow*dimK+k;
+                index2 = globalCol*dimK+k;
                 acc += matA[index]*matB[index2];
             }
-            resIndex = m*dimN +n;
+            resIndex = globalRow*dimN +globalCol;
             matC[resIndex] = acc;
 //        }
 //    }
