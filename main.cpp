@@ -28,14 +28,16 @@ float RandomFloat (float min = 0.0 , float max = 1.0);
 void mmult(const int id, const float* matA, const float* matB,
            float* matC, const int* dimM, const int* dimK, const int* dimN, const int* block_size);
 
+template <typename T>
 void mmult_OpenCL_coalesced(cl::CommandQueue& q,cl::Context &context,cl::Kernel &kernel,
-                            std::vector<float> matA, std::vector<float>matB, std::vector<float> &hw_result,
+                            std::vector<T> matA, std::vector<T>matB, std::vector<T> &hw_result,
                             std::vector<int>dimensions);
 
 int main () {
   cl_int err;
   
   std::srand(std::time(nullptr));
+  //OpenCL configuration
   std::vector<cl::Platform> all_platforms;
   cl::Platform::get (&all_platforms);
   std::vector<cl::Device> devices;
@@ -55,41 +57,25 @@ int main () {
   err = program.build ("-g");
   
   assert(err==CL_BUILD_SUCCESS);
-  cl::Kernel vadd(program,"vadd",&err);
+  cl::Kernel vadd_opencl(program,"vadd",&err);
   assert(err==CL_SUCCESS);
+  cl::Kernel mmult_(program,"mmult",&err);
+  assert(err==CL_SUCCESS);
+
+  //OpenCL configuration end
+
+
   std::vector<int> A = std::vector<int>(LOAD,1);
   std::vector<int> B = std::vector<int>(LOAD);  
   std::vector<int> C = std::vector<int>(LOAD,0);
   std::vector<int> C_sim = std::vector<int>(LOAD,0);
-  int global = 4;
-  int block_size=LOAD/global;
+  std::vector<int> dimensions = {1,2,3} ;
 
   for(auto &x:B)x = rand()%20;
   for(int i =0;i<LOAD;i++){
     C_sim[i]=A[i]+B[i];
   }
-  
-  cl::Buffer buffer_A(context,CL_MEM_READ_ONLY, sizeof (int)*LOAD,NULL,&err);
-  cl::Buffer buffer_B(context,CL_MEM_READ_ONLY, sizeof (int)*LOAD,NULL,&err);
-  cl::Buffer buffer_C(context,CL_MEM_WRITE_ONLY, sizeof (int)*LOAD,NULL,&err);
-  cl::Buffer buffer_block(context,CL_MEM_READ_ONLY, sizeof (int),NULL,&err);
-
-  int nargs = 0;
-  vadd.setArg (nargs++,buffer_A);
-  vadd.setArg (nargs++,buffer_B);
-  vadd.setArg (nargs++,buffer_C);
-  vadd.setArg (nargs,buffer_block);
-  
-  queue.enqueueWriteBuffer (buffer_A,CL_TRUE,0, sizeof (int)*LOAD,A.data ());
-  queue.enqueueWriteBuffer (buffer_B,CL_TRUE,0, sizeof (int)*LOAD,B.data ());
-  queue.enqueueWriteBuffer (buffer_block,CL_TRUE,0, sizeof (int),&block_size);
-
-  cl::Event event;
-  queue.enqueueNDRangeKernel (vadd, 0, cl::NDRange(global), cl::NullRange, NULL, &event);
-  event.wait ();
-
-  queue.enqueueReadBuffer (buffer_C,CL_TRUE,0, sizeof (int)*LOAD,C.data ());
-  queue.finish ();
+  mmult_OpenCL_coalesced (queue, context, vadd_opencl, A, B, C, dimensions);
   bool match = true;
   for(int i =0;i<LOAD;i++){
     if (C_sim[i]!=C[i]){
@@ -138,12 +124,37 @@ float RandomFloat (float min , float max) {
   float range = max - min;
   return ( random * range ) + min;
 }
-void mmult_OpenCL_coalesced (cl::CommandQueue &q ,
+template <typename T>
+void mmult_OpenCL_coalesced (cl::CommandQueue &queue ,
                              cl::Context &context ,
                              cl::Kernel &kernel ,
-                             std::vector<float> matA ,
-                             std::vector<float> matB ,
-                             std::vector<float> &hw_result ,
+                             std::vector<T> matA ,
+                             std::vector<T> matB ,
+                             std::vector<T> &hw_result ,
                              std::vector<int> dimensions) {
+  cl_int err;
+  cl::Buffer buffer_A(context,CL_MEM_READ_ONLY, sizeof (int)*LOAD,NULL,&err);
+  cl::Buffer buffer_B(context,CL_MEM_READ_ONLY, sizeof (int)*LOAD,NULL,&err);
+  cl::Buffer buffer_C(context,CL_MEM_WRITE_ONLY, sizeof (int)*LOAD,NULL,&err);
+  cl::Buffer buffer_block(context,CL_MEM_READ_ONLY, sizeof (int),NULL,&err);
 
+  int nargs = 0;
+  kernel.setArg (nargs++,buffer_A);
+  kernel.setArg (nargs++,buffer_B);
+  kernel.setArg (nargs++,buffer_C);
+  kernel.setArg (nargs,buffer_block);
+
+  int global = 4;
+  int block_size=LOAD/global;
+
+  queue.enqueueWriteBuffer (buffer_A,CL_TRUE,0, sizeof (int)*LOAD,matA.data ());
+  queue.enqueueWriteBuffer (buffer_B,CL_TRUE,0, sizeof (int)*LOAD,matB.data ());
+  queue.enqueueWriteBuffer (buffer_block,CL_TRUE,0, sizeof (int),&block_size);
+
+  cl::Event event;
+  queue.enqueueNDRangeKernel (kernel, 0, cl::NDRange(global), cl::NullRange, NULL, &event);
+  event.wait ();
+
+  queue.enqueueReadBuffer (buffer_C,CL_TRUE,0, sizeof (int)*LOAD,hw_result.data ());
+  queue.finish ();
 }
