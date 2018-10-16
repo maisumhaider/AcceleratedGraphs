@@ -28,7 +28,9 @@ float RandomFloat (float min = 0.0 , float max = 1.0);
 void mmult(const int id, const float* matA, const float* matB,
            float* matC, const int* dimM, const int* dimK, const int* dimN, const int* block_size);
 
-void mmult_OpenCL_coalesced(cl::CommandQueue& q,cl::Context &context,cl::Kernel &kernel);
+void mmult_OpenCL_coalesced(cl::CommandQueue& q,cl::Context &context,cl::Kernel &kernel,
+                            std::vector<float> matA, std::vector<float>matB, std::vector<float> &hw_result,
+                            std::vector<int>dimensions);
 
 int main () {
   cl_int err;
@@ -135,4 +137,13 @@ float RandomFloat (float min , float max) {
   float random = (( float ) rand ()) / ( float ) RAND_MAX;
   float range = max - min;
   return ( random * range ) + min;
+}
+void mmult_OpenCL_coalesced (cl::CommandQueue &q ,
+                             cl::Context &context ,
+                             cl::Kernel &kernel ,
+                             std::vector<float> matA ,
+                             std::vector<float> matB ,
+                             std::vector<float> &hw_result ,
+                             std::vector<int> dimensions) {
+
 }
