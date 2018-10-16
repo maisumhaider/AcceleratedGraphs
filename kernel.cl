@@ -16,11 +16,15 @@ __kernel void mmult(__global const float* matA,  //Read-only input matrix1
                     __global const int* dimN,
                     __global const int* block_size){
   int id = get_global_id(0);//id/dimM;
+  int items_to_calculate = block_size[0];
+  if(id==(get_global_size(0)-1)){
+    items_to_calculate += (dimM[0]*dimN[0]%block_size[0]);
+  }
   int k,i,startRow,startCol;
   int index,index2,resIndex;
   float acc = 0.0f;
-  startRow = (id * block_size[0])/dimM[0];
-  startCol = (id * block_size[0])%dimM[0];
+  startRow = (id * items_to_calculate)/dimM[0];
+  startCol = (id * items_to_calculate)%dimM[0];
   printf("Executing Kernel\n");
   for(i=0;i<block_size[0];i++) {
     for ( k = 0 ; k < dimK[0] ; k++ ) {

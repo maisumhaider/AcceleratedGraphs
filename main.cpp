@@ -64,15 +64,15 @@ int main () {
 
   //OpenCL configuration end
 
-
-  std::vector<int> A = std::vector<int>(LOAD,1);
-  std::vector<int> B = std::vector<int>(LOAD);  
-  std::vector<int> C = std::vector<int>(LOAD,0);
-  std::vector<int> C_sim = std::vector<int>(LOAD,0);
+  int m=3,k=3,n=3;
+  std::vector<int> A = std::vector<int>(m*k,1);
+  std::vector<int> B = std::vector<int>(k*n);
+  std::vector<int> C = std::vector<int>(m*n,0);
+  std::vector<int> C_sim = std::vector<int>(m*n,0);
   std::vector<int> dimensions = {1,2,3} ;
 
   for(auto &x:B)x = rand()%20;
-  for(int i =0;i<LOAD;i++){
+  for(int i =0;i<m*n;i++){
     C_sim[i]=A[i]+B[i];
   }
   mmult_OpenCL_coalesced (queue, context, vadd_opencl, A, B, C, dimensions);
