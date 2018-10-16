@@ -3,7 +3,6 @@
 #include <fstream>
 #include <cassert>
 #include <cmath>
-#define LOAD 4096
 #define CORES 4
 using std::cout;
 using std::endl;
@@ -59,12 +58,10 @@ int main () {
   assert(err==CL_BUILD_SUCCESS);
   cl::Kernel vadd_opencl(program,"vadd",&err);
   assert(err==CL_SUCCESS);
-  cl::Kernel mmult_(program,"mmult",&err);
-  assert(err==CL_SUCCESS);
 
   //OpenCL configuration end
 
-  int m=3,k=3,n=3;
+  int m=4,k=4,n=4;
   std::vector<int> A = std::vector<int>(m*k,1);
   std::vector<int> B = std::vector<int>(k*n);
   std::vector<int> C = std::vector<int>(m*n,0);
@@ -77,7 +74,7 @@ int main () {
   }
   mmult_OpenCL_coalesced (queue, context, vadd_opencl, A, B, C, dimensions);
   bool match = true;
-  for(int i =0;i<LOAD;i++){
+  for(int i =0;i<m*n;i++){
     if (C_sim[i]!=C[i]){
       cout<<"Id:"<<i<<" SW Res:"<<C_sim[i]<<" HW Res:"<<C[i]<<endl;
       match= false;
@@ -133,9 +130,12 @@ void mmult_OpenCL_coalesced (cl::CommandQueue &queue ,
                              std::vector<T> &hw_result ,
                              std::vector<int> dimensions) {
   cl_int err;
-  cl::Buffer buffer_A(context,CL_MEM_READ_ONLY, sizeof (int)*LOAD,NULL,&err);
-  cl::Buffer buffer_B(context,CL_MEM_READ_ONLY, sizeof (int)*LOAD,NULL,&err);
-  cl::Buffer buffer_C(context,CL_MEM_WRITE_ONLY, sizeof (int)*LOAD,NULL,&err);
+  size_t buff_A_size = sizeof (T)*dimensions[0]*dimensions[1];
+  size_t buff_B_size = sizeof (T)*dimensions[1]*dimensions[2];
+  size_t buff_C_size = sizeof (T)*dimensions[0]*dimensions[2];
+  cl::Buffer buffer_A(context,CL_MEM_READ_ONLY,buff_A_size ,NULL,&err);
+  cl::Buffer buffer_B(context,CL_MEM_READ_ONLY, buff_B_size,NULL,&err);
+  cl::Buffer buffer_C(context,CL_MEM_WRITE_ONLY, buff_C_size,NULL,&err);
   cl::Buffer buffer_block(context,CL_MEM_READ_ONLY, sizeof (int),NULL,&err);
 
   int nargs = 0;
@@ -145,16 +145,17 @@ void mmult_OpenCL_coalesced (cl::CommandQueue &queue ,
   kernel.setArg (nargs,buffer_block);
 
   int global = 4;
-  int block_size=LOAD/global;
+  int workload = dimensions[0]*dimensions[2];
+  int block_size=workload/global;
 
-  queue.enqueueWriteBuffer (buffer_A,CL_TRUE,0, sizeof (int)*LOAD,matA.data ());
-  queue.enqueueWriteBuffer (buffer_B,CL_TRUE,0, sizeof (int)*LOAD,matB.data ());
+  queue.enqueueWriteBuffer (buffer_A,CL_TRUE,0,buff_A_size ,matA.data ());
+  queue.enqueueWriteBuffer (buffer_B,CL_TRUE,0,buff_B_size,matB.data ());
   queue.enqueueWriteBuffer (buffer_block,CL_TRUE,0, sizeof (int),&block_size);
 
   cl::Event event;
   queue.enqueueNDRangeKernel (kernel, 0, cl::NDRange(global), cl::NullRange, NULL, &event);
   event.wait ();
 
-  queue.enqueueReadBuffer (buffer_C,CL_TRUE,0, sizeof (int)*LOAD,hw_result.data ());
+  queue.enqueueReadBuffer (buffer_C,CL_TRUE,0,buff_C_size,hw_result.data ());
   queue.finish ();
 }
