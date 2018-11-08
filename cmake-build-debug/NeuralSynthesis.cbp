@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="NeuralSynthesis"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\Kernels\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="D:/maisum/Documents/NeuralSynthesis/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="NeuralSynthesis">
+				<Option output="D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/NeuralSynthesis.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="D:/maisum/Documents/NeuralSynthesis/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v8.0/include"/>
+					<Add directory="E:/Program Files (x86)/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++"/>
+					<Add directory="E:/Program Files (x86)/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/x86_64-w64-mingw32"/>
+					<Add directory="E:/Program Files (x86)/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/backward"/>
+					<Add directory="E:/Program Files (x86)/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/include"/>
+					<Add directory="E:/Program Files (x86)/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/include-fixed"/>
+					<Add directory="E:/Program Files (x86)/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/../../../../x86_64-w64-mingw32/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 NeuralSynthesis"/>
+					<CompileFile command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="NeuralSynthesis/fast">
+				<Option output="D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/NeuralSynthesis.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="D:/maisum/Documents/NeuralSynthesis/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v8.0/include"/>
+					<Add directory="E:/Program Files (x86)/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++"/>
+					<Add directory="E:/Program Files (x86)/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/x86_64-w64-mingw32"/>
+					<Add directory="E:/Program Files (x86)/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/backward"/>
+					<Add directory="E:/Program Files (x86)/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/include"/>
+					<Add directory="E:/Program Files (x86)/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/include-fixed"/>
+					<Add directory="E:/Program Files (x86)/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/../../../../x86_64-w64-mingw32/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 NeuralSynthesis/fast"/>
+					<CompileFile command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="D:/maisum/Documents/NeuralSynthesis/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="D:/maisum/Documents/NeuralSynthesis/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="E:/Program Files (x86)/mingw64/bin/mingw32-make.exe -f &quot;D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="D:/maisum/Documents/NeuralSynthesis/main.cpp">
+			<Option target="NeuralSynthesis"/>
+		</Unit>
+		<Unit filename="D:/maisum/Documents/NeuralSynthesis/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="D:/maisum/Documents/NeuralSynthesis/Kernels/vadd.cl">
+			<Option virtualFolder="CMake Files\Kernels\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

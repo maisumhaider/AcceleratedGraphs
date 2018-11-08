@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<schedule platform="cpu" vendor="intel">
+	<kernels>
+		<kernel name="add">
+			<global>1024</global>
+			<local>1024</local>
+			<block_size>0</block_size>
+		</kernel>
+	</kernels>
+</schedule>

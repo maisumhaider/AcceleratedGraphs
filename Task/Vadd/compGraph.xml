@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<graph>
+	<nodes>		
+		<node type="producer" name="A" dtype="int">
+			<dimension><x>1024</x><y>1</y><z>1</z></dimension>
+		</node>
+		<node type="producer" name="B" dtype="int">
+			<dimension><x>1024</x><y>1</y><z>1</z></dimension>
+		</node>
+		<node type="consumer" name="C" dtype="int">
+			<dimension><x>1024</x><y>1</y><z>1</z></dimension>
+		</node>
+		<node type="consumer" name="D" dtype="int">
+			<dimension><x>1024</x><y>1</y><z>1</z></dimension>
+		</node>
+		<node type="worker" subtype="add" name="add1" dtype="int"/>
+		<node type="worker" subtype="mult" name="mult1" dtype="int"/>
+	</nodes>
+	<connections>		
+		<connection source="A" target="add1"/>
+		<connection source="B" target="add1"/>
+		<connection source="add1" target="C"/>
+		<connection source= "C" target="mult1"/>
+		<connection source= "C" target="mult1"/>
+		<connection source= "mult1" target="D"/>
+	</connections>
+</graph>

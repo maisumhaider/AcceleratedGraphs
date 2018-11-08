@@ -1,0 +1,4 @@
+"E:\Program Files (x86)\apps\CLion\ch-0\182.4323.58\bin\cmake\win\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" D:\maisum\Documents\NeuralSynthesis
+-- Configuring done
+-- Generating done
+-- Build files have been written to: D:/maisum/Documents/NeuralSynthesis/cmake-build-debug
