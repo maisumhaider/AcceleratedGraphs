@@ -20,23 +20,16 @@ void ComputationNode::set_CL_Buffers()
 	cl::Context ctx = node.getInfo<CL_KERNEL_CONTEXT>();
 	cl_int err;
 	int i =0;
-	for (auto & data_in_buffer : kernel_data_in_vector_buffers)
+	for (auto & input_buffer : kernel_input_buffers_)
 	{
-		auto size = sizeof(int)*data_in_buffer.size();
-		//TODO remove hard coded data type
-		cl::Buffer inp(ctx, CL_MEM_READ_ONLY, size,nullptr, &err);
+		err = node.setArg(i++, *input_buffer);
 		assert(err == CL_SUCCESS);
-		kernel_input_buffers_.emplace_back(inp);
-		node.setArg(i++, inp);
 	}
-	for (auto & data_out_buffer : kernel_data_out_vector_buffers)
+	for (auto & output_buffer : kernel_output_buffers_)
 	{
 		//TODO remove hard coded data type
-		auto size = sizeof(int)*data_out_buffer.size();
-		cl::Buffer op(ctx, CL_MEM_READ_ONLY, size, nullptr, &err);
+		err = node.setArg(i++, *output_buffer);
 		assert(err == CL_SUCCESS);
-		kernel_output_buffers_.emplace_back(op);
-		node.setArg(i++, op);
 	}
 }
 ComputationNode::~ComputationNode()

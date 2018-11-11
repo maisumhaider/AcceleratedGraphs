@@ -28,9 +28,9 @@ class CompGraphParser
 	
 public:
 	CompGraphParser() = default;
-	CompGraphParser(pugi::xml_document& doc);
+	CompGraphParser(pugi::xml_document& doc, map<string, vector<int>>& fifos, map<string, cl::Buffer>& buffer, const cl::Context& ctx);
 	std::map<string,graph_node> get_worker_nodes() const;
-	void set_comp_node_data_buffers(ComputationNode& computation_node, string kernel_name);
+	void set_comp_node_data_buffers(ComputationNode& computation_node, string kernel_name, map<string, vector<int>>& fifos, map<string, cl::Buffer>& buffer);
 	~CompGraphParser();
 };
 

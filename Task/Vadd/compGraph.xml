@@ -13,8 +13,12 @@
 		<node type="consumer" name="D" dtype="int">
 			<dimension><x>1024</x><y>1</y><z>1</z></dimension>
 		</node>
+		<node type="consumer" name="E" dtype="int">
+			<dimension><x>1024</x><y>1</y><z>1</z></dimension>
+		</node>
 		<node type="worker" subtype="add" name="add1" dtype="int"/>
 		<node type="worker" subtype="mult" name="mult1" dtype="int"/>
+		<node type="worker" subtype="sub" name="sub1" dtype="int"/>
 	</nodes>
 	<connections>		
 		<connection source="A" target="add1"/>
@@ -23,5 +27,8 @@
 		<connection source= "C" target="mult1"/>
 		<connection source= "C" target="mult1"/>
 		<connection source= "mult1" target="D"/>
+		<connection source= "D" target="sub1"/>
+		<connection source= "A" target="sub1"/>
+		<connection source= "sub1" target="E"/>
 	</connections>
 </graph>

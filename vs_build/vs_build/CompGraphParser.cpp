@@ -1,7 +1,7 @@
 #include "CompGraphParser.h"
 #include <cassert>
-
-
+#include <CL/cl2.hpp>
+//TODO Check for existing keys in fifo and buffer maps.
 node_t get_type(string type)
 {
 	if (type == "producer") return producer;
@@ -16,8 +16,9 @@ void dimensionalityCheck(int arr[3])
 	assert(arr[1] > 0);
 	assert(arr[0] > 0);
 }
-CompGraphParser::CompGraphParser(pugi::xml_document& doc)
+CompGraphParser::CompGraphParser(pugi::xml_document& doc,map<string,vector<int>>& fifos, map<string,cl::Buffer>& buffer, const cl::Context& ctx)
 {
+	cl_int err;
 	pugi::xml_node xml_nodes = doc.child("graph").child("nodes");
 	pugi::xml_node connections = doc.child("graph").child("connections");
 	for (pugi::xml_node xml_node_ = xml_nodes.first_child(); xml_node_; xml_node_ = xml_node_.next_sibling())
@@ -32,6 +33,19 @@ CompGraphParser::CompGraphParser(pugi::xml_document& doc)
 			node.dimension[2] = xml_node_.child("dimension").child("z").text().as_int();
 			dimensionalityCheck(node.dimension);
 			producer_consumer_nodes[node.name] = node;
+			fifos[node.name] = vector<int>(node.dimension[0] * node.dimension[1] * node.dimension[2],1);
+			if (node.type == producer)
+			{
+				
+				buffer[node.name] = cl::Buffer(ctx, CL_MEM_WRITE_ONLY, fifos[node.name].size()*sizeof(int), nullptr, &err);
+				assert(err == CL_SUCCESS);
+			}
+			else if (node.type == consumer)
+			{
+				buffer[node.name] = cl::Buffer(ctx, CL_MEM_READ_ONLY, fifos[node.name].size()*sizeof(int), nullptr, &err);
+				assert(err == CL_SUCCESS);
+
+			}
 		}
 		else if (node.type == worker)
 		{
@@ -51,6 +65,9 @@ CompGraphParser::CompGraphParser(pugi::xml_document& doc)
 				}
 			}
 			worker_nodes[node.name] = node;
+			fifos[node.name] = vector<int>(node.dimension[0] * node.dimension[1] * node.dimension[2]);
+			buffer[node.name] = cl::Buffer(ctx, CL_MEM_READ_WRITE, fifos[node.name].size()*sizeof(int), nullptr, &err);
+			assert(err == CL_SUCCESS);
 		}
 	}
 }
@@ -61,7 +78,7 @@ std::map<string,graph_node> CompGraphParser::get_worker_nodes() const
 }
 
 
-void CompGraphParser::set_comp_node_data_buffers(ComputationNode& computation_node, string kernel_name)
+void CompGraphParser::set_comp_node_data_buffers(ComputationNode& computation_node, string kernel_name, map<string,vector<int>>& fifos, map<string,cl::Buffer>& buffer)
 {
 	graph_node worker = worker_nodes[kernel_name];
 	int prevDim[3] = {0};
@@ -71,6 +88,7 @@ void CompGraphParser::set_comp_node_data_buffers(ComputationNode& computation_no
 		string conn_node = std::get<0>(connection);
 		bool is_src = std::get<1>(connection);
 		auto prod_con = producer_consumer_nodes[conn_node];
+		
 		
 		//Note The following is a check to ensure that all input and output of a worker node are same. 
 		// Assumption: Homogenous Static Dataflow where each node consumes one node from every input and produces one token on output.
@@ -90,10 +108,10 @@ void CompGraphParser::set_comp_node_data_buffers(ComputationNode& computation_no
 		const auto flatten_dim = prod_con.dimension[0] * prod_con.dimension[1] * prod_con.dimension[2];
 		if (is_src)
 		{
-			computation_node.add_input_data_buffer(vector<int>(flatten_dim,1));
+			computation_node.add_input_data_buffer(&(fifos[conn_node]),&buffer[conn_node]);
 		}
 		else {
-			computation_node.add_output_data_buffer(vector<int>(flatten_dim,0));
+			computation_node.add_output_data_buffer(&(fifos[conn_node]),&buffer[conn_node]);
 		}
 	}
 
