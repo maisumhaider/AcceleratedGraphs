@@ -108,7 +108,11 @@ Compute_Platform::Compute_Platform(string& synthesis_file)
 	{
 		for (auto target : target_devices)
 		{
-			if (device_is_target(target, device)) all_devices.push_back(device);
+			if (device_is_target(target, device))
+			{
+								
+				all_devices.push_back(device);
+			}
 		}
 	}
 	for (const cl::Device &device : all_devices)
@@ -116,6 +120,8 @@ Compute_Platform::Compute_Platform(string& synthesis_file)
 		//TODO Remove nvidia ignore.
 		if (checkDeviceVendor("nvidia", device)) continue;
 		cl_int err;
+		cout << "Creating Context for Device " << device.getInfo<CL_DEVICE_NAME>(&err) << endl;
+		assert(err == CL_SUCCESS);
 		cl::Context ctx(device, nullptr, nullptr, nullptr, &err);
 		assert(err == CL_SUCCESS);
 		contexts.push_back(ctx);

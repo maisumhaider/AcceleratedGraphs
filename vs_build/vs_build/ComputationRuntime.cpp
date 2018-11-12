@@ -3,12 +3,12 @@
 #include "ComputationGraph.h"
 #include "utils.h"
 #include <iostream>
-
+using std::cout;
 
 ComputationRuntime::ComputationRuntime(Compute_Platform& platform)
 {
 	cl_int err;
-	cl::CommandQueue q = cl::CommandQueue(platform.get_context("intel", CL_DEVICE_TYPE_CPU), 0, &err);
+	cl::CommandQueue q = cl::CommandQueue(platform.get_context().front(), 0, &err);	
 	assert(err == CL_SUCCESS);
 	queues.emplace_back(q);
 	
@@ -24,7 +24,13 @@ bool ComputationRuntime::execute_compute_graph(ComputationGraph& graph)
 	cl::Event event;
 	bool match = true;
 	cl::CommandQueue queue = queues.front();	
-	cl::Context context = queue.getInfo<CL_QUEUE_CONTEXT>();	
+	cl::Context context = queue.getInfo<CL_QUEUE_CONTEXT>();
+	std::cout << "Executing on Devices "<<std::endl;
+	for (auto dev : context.getInfo<CL_CONTEXT_DEVICES>())
+	{
+		cout << dev.getInfo<CL_DEVICE_NAME>() << CL_DEVICE_ENDIAN_LITTLE << " ";
+	}
+	cout << std::endl;
 	int i = 0;	
 	auto nodes = graph.get_nodes();
 	for (auto& node : nodes){
@@ -50,7 +56,7 @@ bool ComputationRuntime::execute_compute_graph(ComputationGraph& graph)
 	}
 	std::cout << "number of fifos:"<<graph.get_fifo_count()<<std::endl;
 	std::cout << "number of cl buffers:" << graph.get_buffer_count()<<std::endl;	
-	return true;
+ 	return true;
 }
 
 ComputationRuntime::~ComputationRuntime()

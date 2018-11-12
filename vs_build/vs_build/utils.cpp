@@ -19,7 +19,14 @@ std::string getFullPath(const char * partialPath)
 
 	}
 }
-
+const char *oclErrorCode(cl_int code)
+{
+	std::map<cl_int, std::string>::const_iterator iter = oclErrorCodes.find(code);
+	if (iter == oclErrorCodes.end())
+		return "UNKNOWN ERROR";
+	else
+		return iter->second.c_str();
+}
 std::string get_kernel_as_string(const std::string& filename)
 {
 	std::ifstream kernel_file(filename);

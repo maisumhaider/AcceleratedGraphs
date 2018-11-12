@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <platform>
 	<devices>
-		<device vendor="intel" type="CPU"/>		
+		<device vendor="intel" type="GPU"/>		
 	</devices>
 </platform>
