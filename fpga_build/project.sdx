@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ASCII"?>
+<openclProject:OpenCLProject xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:openclProject="http://www.xilinx.com/openclproject" name="fpga_build" location="/home/maisum/Documents/NeuralSynthesis/fpga_build" platform="/opt/Xilinx/SDx/2018.2/platforms/zed/zed.xpfm" platformUID="xilinx.com:zed:zed:1.0" systemProject="fpga_build_system" sysConfig="ocl" cpu="ocl" cpuInstance="" os="linux">
+  <configuration name="Debug" id="com.xilinx.sdx.sdsoc.opencl.armv7l.config.debug.1770188691">
+    <configBuildOptions xsi:type="openclProject:OpenCLOptions" target="hw" emulationToolchain="com.xilinx.sdx.sdsoc.opencl.toolchain.armv7l" hardwareToolchain="com.xilinx.sdx.sdsoc.opencl.toolchain.armv7l">
+      <binaryContainers name="binary_container_1">
+        <kernels name="vadd" sourceFile="src/vadd.cl" maxMemoryPorts="true">
+          <computeUnits name="vadd_1"/>
+        </kernels>
+      </binaryContainers>
+      <sdsBuildOptions insertapm="false" gensdcard="true" dmclkid="2" enableHwSwTrace="false" traceApplication="false"/>
+    </configBuildOptions>
+    <lastBuildOptions xsi:type="openclProject:OpenCLOptions" target="hw" emulationToolchain="com.xilinx.sdx.sdsoc.opencl.toolchain.armv7l" hardwareToolchain="com.xilinx.sdx.sdsoc.opencl.toolchain.armv7l">
+      <binaryContainers name="binary_container_1">
+        <kernels name="vadd" sourceFile="src/vadd.cl" maxMemoryPorts="true">
+          <computeUnits name="vadd_1"/>
+        </kernels>
+      </binaryContainers>
+      <sdsBuildOptions insertapm="false" gensdcard="true" dmclkid="2" enableHwSwTrace="false" traceApplication="false"/>
+    </lastBuildOptions>
+  </configuration>
+  <configuration name="Release" id="com.xilinx.sdx.sdsoc.opencl.armv7l.config.release.1309857178" dirty="true">
+    <configBuildOptions xsi:type="openclProject:OpenCLOptions" target="hw" emulationToolchain="com.xilinx.sdx.sdsoc.opencl.toolchain.armv7l" hardwareToolchain="com.xilinx.sdx.sdsoc.opencl.toolchain.armv7l">
+      <binaryContainers name="binary_container_1">
+        <kernels name="vadd" sourceFile="src/vadd.cl">
+          <computeUnits name="vadd_1"/>
+        </kernels>
+      </binaryContainers>
+      <sdsBuildOptions insertapm="false" gensdcard="true" dmclkid="2" enableHwSwTrace="false" traceApplication="false"/>
+    </configBuildOptions>
+  </configuration>
+</openclProject:OpenCLProject>

@@ -3,29 +3,8 @@
 	<kernels>
 		<kernel name="add">
 			<global>1024</global>
-			<local>0</local>
-			<block_size>0</block_size>
-		</kernel>
-		<kernel name="mult">
-			<global>1024</global>
-			<local>0</local>
+			<local>1024</local>
 			<block_size>0</block_size>
 		</kernel>
 	</kernels>
-	<sequences>
-		<sequence>
-			<kernel name="add" task="enqWrBuff"/>
-		</sequence>
-		<sequence>
-			<kernel name="add" task="enqNDR"/>
-		</sequence>
-		<sequence>
-			<kernel name="mult" task="enqNDR"/>
-			<kernel name="add" task="enqWrBuff"/>
-		</sequence>
-		<sequence>
-			<kernel name="add" task="enqNDR"/>
-			<kernel name="mult" task="enqRdBuff"/>
-		</sequence>
-	</sequences>
 </schedule>

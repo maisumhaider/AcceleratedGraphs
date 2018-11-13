@@ -1,3 +1,14 @@
-D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/CMakeFiles/NeuralSynthesis.dir
-D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/CMakeFiles/edit_cache.dir
-D:/maisum/Documents/NeuralSynthesis/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/CMakeFiles/install/strip.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/CMakeFiles/install/local.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/CMakeFiles/NeuralSynthesis.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/CMakeFiles/install.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/CMakeFiles/list_install_components.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/pugixml-1.9/CMakeFiles/install/strip.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/pugixml-1.9/CMakeFiles/install/local.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/pugixml-1.9/CMakeFiles/pugixml.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/pugixml-1.9/CMakeFiles/install.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/pugixml-1.9/CMakeFiles/list_install_components.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/pugixml-1.9/CMakeFiles/edit_cache.dir
+/home/maisum/Documents/NeuralSynthesis/cmake-build-debug/pugixml-1.9/CMakeFiles/rebuild_cache.dir
